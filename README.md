@@ -282,8 +282,6 @@ void convert_fmt_c(va_list *args_list, fmt_info_t *fmt_info)
 }
 ```
 
-
-
 #### 1. Education is when you read the fine print. Experience is what you get if you don't
 
 Handle the following conversion specifiers:
@@ -298,6 +296,101 @@ Handle the following conversion specifiers:
 **Repo:**
 
 Github repository: `printf`
+
+
+##### SOLUTION
+
+File - [spec_printer_0.c](https://github.com/codebyrugi/printf/blob/master/spec_printer_0.c)
+
+##### `void convert_fmt_percent(va_list *args_list, fmt_info_t *fmt_info)`
+
+convert_fmt_percent - Prints a percent sign (%)
+
+```
+void write_format(va_list *args_list, fmt_info_t *fmt_info)
+{
+	int i;
+	spec_printer_t spec_printers[] = {
+		{'%', convert_fmt_percent},
+		{'p', convert_fmt_p},
+		{'c', convert_fmt_c},
+		{'s', convert_fmt_s},
+        /* Add These Lines */
+		{'d', convert_fmt_di},
+		{'i', convert_fmt_di},
+	};
+
+	for (i = 0; i < 23 && spec_printers[i].spec != '\0'; i++)
+	{
+		if (fmt_info->spec == spec_printers[i].spec)
+		{
+			spec_printers[i].print_arg(args_list, fmt_info);
+			break;
+		}
+	}
+}
+```
+
+FILE -> [spec_printer_1.c](https://github.com/codebyrugi/printf/blob/master/spec_printer_1.c)
+
+##### `void convert_fmt_di(va_list *args_list, fmt_info_t *fmt_info)`
+
+convert_fmt_di - Prints a signed integer
+
+```
+/**
+ * convert_fmt_di - Prints a signed integer
+ * @args_list: The arguments list
+ * @fmt_info: The format info
+ *
+ * Return: The number of characters written
+ */
+void convert_fmt_di(va_list *args_list, fmt_info_t *fmt_info)
+{
+	int i, len = 0, zeros_count = 0, num_len;
+	long num;
+	char *str, inv_plus;
+
+	if (fmt_info->is_long)
+		num = va_arg(*args_list, long);
+	else if (fmt_info->is_short)
+		num = (short)va_arg(*args_list, long);
+	else
+		num = va_arg(*args_list, int);
+	str = long_to_str(num);
+	if (str)
+	{
+		inv_plus = num >= 0 && (fmt_info->show_sign || fmt_info->space) ? 1 : 0;
+		if (fmt_info->is_precision_set && !fmt_info->prec && !num)
+		{
+			print_repeat(' ', fmt_info->width);
+		}
+		else
+		{
+			num_len = str_len(str) + (inv_plus ? 1 : 0);
+			if (fmt_info->is_precision_set)
+				zeros_count = MAX(fmt_info->prec + (inv_plus || num < 0 ? 1 : 0),
+					num_len) - num_len;
+			else
+				zeros_count = fmt_info->pad == '0' ? MAX(fmt_info->width,
+					num_len) - num_len : 0;
+			if (fmt_info->is_width_set)
+				len = (MAX(fmt_info->width, num_len) - num_len) - zeros_count;
+			for (i = 0; !fmt_info->left && i < len; i++)
+				_putchar(' ');
+			if (num < 0 || inv_plus)
+				_putchar(num < 0 ? '-'
+					: (fmt_info->space && !fmt_info->show_sign ? ' ' : '+'));
+			put_num(zeros_count, num, str);
+			for (i = 0; fmt_info->left && i < len; i++)
+				_putchar(' ');
+		}
+		free(str);
+	}
+}
+```
+
+
 
 #### 2. With a face like mine, I do better in print
 

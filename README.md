@@ -122,6 +122,168 @@ Write a function that produces output according to a format.
 
 Github repository: `printf`
 
+##### SOLUTION
+
+File -> [_printf.c](https://github.com/codebyrugi/printf/blob/master/_printf.c)
+
+`_printf` - produces output according to a format
+
+`Return`: The number of characters that were printed
+
+##### `int _printf(const char *format, ...)`
+
+```
+int _printf(const char *format, ...)
+{
+	int i = 0, tmp, processing_escape = FALSE, error = 1, last_token;
+	fmt_info_t fmt_info;
+	va_list args;
+
+	if (!format || (format[0] == '%' && format[1] == '\0'))
+		return (-1);
+	va_start(args, format);
+	write_to_buffer(0, -1);
+	for (i = 0; format && *(format + i) != '\0'; i++)
+	{
+		if (processing_escape)
+		{
+			tmp = read_format_info(format + i, args, &fmt_info, &last_token);
+			processing_escape = FALSE;
+			set_format_error(format, &i, tmp, last_token, &error);
+			if (is_specifier(fmt_info.spec))
+				write_format(&args, &fmt_info);
+			i += (is_specifier(fmt_info.spec) ? tmp : 0);
+		}
+		else
+		{
+			if (*(format + i) == '%')
+				processing_escape = TRUE;
+			else
+				_putchar(*(format + i));
+		}
+	}
+	write_to_buffer(0, 1);
+	va_end(args);
+	return (error <= 0 ? error : write_to_buffer('\0', -2));
+}
+```
+
+##### `void write_format(va_list *args_list, fmt_info_t *fmt_info)`
+
+```
+void write_format(va_list *args_list, fmt_info_t *fmt_info)
+{
+	int i;
+	spec_printer_t spec_printers[] = {
+		{'%', convert_fmt_percent},
+		{'c', convert_fmt_c},
+		{'s', convert_fmt_s},
+	};
+
+	for (i = 0; i < 23 && spec_printers[i].spec != '\0'; i++)
+	{
+		if (fmt_info->spec == spec_printers[i].spec)
+		{
+			spec_printers[i].print_arg(args_list, fmt_info);
+			break;
+		}
+	}
+}
+```
+
+[spec_printer_0.c](https://github.com/codebyrugi/printf/blob/master/spec_printer_0.c)
+
+##### `void convert_fmt_percent(va_list *args_list, fmt_info_t *fmt_info)`
+
+convert_fmt_percent - Prints a percent sign (%)
+
+```
+/**
+ * convert_fmt_percent - Prints a percent sign (%)
+ * @args_list: The arguments list
+ * @fmt_info: The format info
+ */
+void convert_fmt_percent(va_list *args_list, fmt_info_t *fmt_info)
+{
+	(void)args_list;
+	_putchar(fmt_info->spec);
+}
+```
+
+##### `void convert_fmt_p(va_list *args_list, fmt_info_t *fmt_info)`
+
+convert_fmt_p - Prints the pointer address
+
+```
+/**
+ * convert_fmt_p - Prints the pointer address
+ * @args_list: The arguments list
+ * @fmt_info: The format info
+ */
+void convert_fmt_p(va_list *args_list, fmt_info_t *fmt_info)
+{
+	int i, len;
+	void *ptr = va_arg(*args_list, void *);
+	char *str = ptr_to_str(ptr);
+
+	(void)fmt_info;
+	if (str)
+	{
+		len = str_len(str);
+		if (!fmt_info->left)
+		{
+			for (i = 0; i < MAX(len, fmt_info->width) - len; i++)
+				_putchar(' ');
+		}
+		for (i = 0; *(str + i) != '\0'; i++)
+			_putchar(*(str + i));
+		if (fmt_info->left)
+		{
+			for (i = 0; i < MAX(len, fmt_info->width) - len; i++)
+				_putchar(' ');
+		}
+		free(str);
+	}
+	else
+	{
+		_putstr("(nil)");
+		if (str)
+			free(str);
+	}
+}
+```
+
+##### `void convert_fmt_c(va_list *args_list, fmt_info_t *fmt_info)`
+
+convert_fmt_c - Prints a character
+
+```
+/**
+ * convert_fmt_c - Prints a character
+ * @args_list: The arguments list
+ * @fmt_info: The format info
+ */
+void convert_fmt_c(va_list *args_list, fmt_info_t *fmt_info)
+{
+	int i, len = 1;
+	char str = va_arg(*args_list, int);
+
+	if (!fmt_info->left)
+	{
+		for (i = 0; i < MAX(len, fmt_info->width) - len; i++)
+			_putchar(' ');
+	}
+	_putchar(str);
+	if (fmt_info->left)
+	{
+		for (i = 0; i < MAX(len, fmt_info->width) - len; i++)
+			_putchar(' ');
+	}
+}
+```
+
+
+
 #### 1. Education is when you read the fine print. Experience is what you get if you don't
 
 Handle the following conversion specifiers:

@@ -191,7 +191,7 @@ void write_format(va_list *args_list, fmt_info_t *fmt_info)
 }
 ```
 
-[spec_printer_0.c](https://github.com/codebyrugi/printf/blob/master/spec_printer_0.c)
+File - [spec_printer_0.c](https://github.com/codebyrugi/printf/blob/master/spec_printer_0.c)
 
 ##### `void convert_fmt_percent(va_list *args_list, fmt_info_t *fmt_info)`
 
